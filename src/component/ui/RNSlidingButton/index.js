@@ -1,6 +1,6 @@
 'use strict';
 
-import React, {Component} from 'react';
+import React, { Component } from 'react';
 import {
     StyleSheet,
     View,
@@ -17,19 +17,63 @@ const SlideDirection = {
 };
 
 export default class RNSlidingButton extends Component {
-    constructor(props) {
-        super(props);
-        this.buttonWidth = 0;
-        this.state = {
-            initialX: 0,
-            locationX: 0,
-            dx: 0,
-            animatedX: new Animated.Value(0),
-            animatedY: new Animated.Value(0),
-            released: false,
-            swiped: true,
-        };
-    }
+    buttonWidth = 0;
+
+    state = {
+        initialX: 0,
+        locationX: 0,
+        dx: 0,
+        animatedX: new Animated.Value(0),
+        animatedY: new Animated.Value(0),
+        released: false,
+        swiped: true,
+    };
+
+    panResponder = PanResponder.create({
+        onStartShouldSetPanResponder: (evt, gestureState) => true,
+        onStartShouldSetPanResponderCapture: (evt, gestureState) => true,
+        onMoveShouldSetPanResponder: (evt, gestureState) => true,
+        onMoveShouldSetPanResponderCapture: (evt, gestureState) => true,
+        onPanResponderTerminationRequest: (evt, gestureState) => true,
+        onPanResponderGrant: (evt, gestureState) => {
+        },
+
+        onPanResponderMove: (evt, gestureState) => {
+            this.setState({
+                locationX: evt.nativeEvent.locationX,
+                dx: gestureState.dx
+            });
+            this.onSlide(gestureState.dx);
+        },
+
+        onPanResponderRelease: (evt, gestureState) => {
+            if (this.isSlideSuccessful()) {
+                this.props.onSlidingSuccess();
+                this.moveButtonOut(() => {
+                    this.setState({ swiped: true });
+                });
+            }
+            this.snapToPosition(() => {
+                this.setState({
+                    released: false,
+                    dx: this.state.initialX
+                });
+            });
+        },
+
+        onPanResponderTerminate: (evt, gestureState) => {
+            this.snapToPosition(() => {
+                this.setState({
+                    released: false,
+                    dx: this.state.initialX
+                });
+            });
+        },
+
+        onShouldBlockNativeResponder: (evt, gestureState) => {
+            return true;
+        }
+    });
 
 
     isSlideSuccessful() {
@@ -52,56 +96,6 @@ export default class RNSlidingButton extends Component {
         }
     }
 
-    componentWillMount() {
-        let self = this;
-
-        this.panResponder = PanResponder.create({
-            onStartShouldSetPanResponder: (evt, gestureState) => true,
-            onStartShouldSetPanResponderCapture: (evt, gestureState) => true,
-            onMoveShouldSetPanResponder: (evt, gestureState) => true,
-            onMoveShouldSetPanResponderCapture: (evt, gestureState) => true,
-            onPanResponderTerminationRequest: (evt, gestureState) => true,
-            onPanResponderGrant: (evt, gestureState) => {
-            },
-
-            onPanResponderMove: (evt, gestureState) => {
-                self.setState({
-                    locationX: evt.nativeEvent.locationX,
-                    dx: gestureState.dx
-                });
-                self.onSlide(gestureState.dx);
-            },
-
-            onPanResponderRelease: (evt, gestureState) => {
-                if (this.isSlideSuccessful()) {
-                    self.props.onSlidingSuccess();
-                    this.moveButtonOut(() => {
-                        self.setState({swiped: true});
-                    });
-                }
-                this.snapToPosition(() => {
-                    self.setState({
-                        released: false,
-                        dx: self.state.initialX
-                    });
-                });
-            },
-
-            onPanResponderTerminate: (evt, gestureState) => {
-                this.snapToPosition(() => {
-                    self.setState({
-                        released: false,
-                        dx: self.state.initialX
-                    });
-                });
-            },
-
-            onShouldBlockNativeResponder: (evt, gestureState) => {
-                return true;
-            }
-        });
-    }
-
     onSlidingSuccess() {
         if (this.props.onSlidingSuccess !== undefined) {
             this.props.onSlidingSuccess();
@@ -120,12 +114,12 @@ export default class RNSlidingButton extends Component {
         }, () => {
             Animated.timing(
                 self.state.animatedX,
-                {toValue: endPos}
+                { toValue: endPos }
             ).start(onCompleteCallback);
 
             Animated.timing(
                 this.state.animatedY,
-                {toValue: endPos}
+                { toValue: endPos }
             ).start(onCompleteCallback);
 
         });
@@ -142,12 +136,12 @@ export default class RNSlidingButton extends Component {
         }, () => {
             Animated.timing(
                 this.state.animatedX,
-                {toValue: endPos}
+                { toValue: endPos }
             ).start(onCompleteCallback);
 
             Animated.timing(
                 this.state.animatedY,
-                {toValue: endPos}
+                { toValue: endPos }
             ).start(onCompleteCallback);
 
         });
@@ -190,7 +184,7 @@ export default class RNSlidingButton extends Component {
         }
 
         return (
-            <View style={[styles.slidingContainer, this.props.style, {height: this.props.height}]}>
+            <View style={[styles.slidingContainer, this.props.style, { height: this.props.height }]}>
                 <View style={styles.container} {...this.panResponder.panHandlers}>
                     {button}
                 </View>
@@ -221,4 +215,4 @@ const styles = StyleSheet.create({
     }
 });
 
-export {SlideDirection}
+export { SlideDirection }
